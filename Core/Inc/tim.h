@@ -42,7 +42,7 @@ void MX_TIM8_Init(void);
 void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
 
 /* USER CODE BEGIN Prototypes */
-void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim);
+
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus
