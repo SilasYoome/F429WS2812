@@ -1,15 +1,16 @@
 #include "ws2812b.h"
 #include "Adafruit_NeoPixel.h"
-#include "delay.h"
+//#include "delay.h"
+#include "stm32f4xx_hal.h"
 //#include "BottomMotor.h"
 #include <math.h>
 #include "tim.h"
 /*----------------------------------------------*
- * 宏定义                                       *
+ * Щ﹚竡                                       *
  *----------------------------------------------*/
 #define FLASH_WHEEL_1 					1
 #define PI                      3.1415692f
-/*TIM+DMA输出*/
+/*TIM+DMA output*/
 #define BIT_1                   38u
 #define BIT_0                   19u
 
@@ -19,26 +20,31 @@ void WS2812_Process(uint8_t model);
 
 
 /*----------------------------------------------*
- * 内部函数原型说明                             *
+ * ず场ㄧ计弧                            *
  *----------------------------------------------*/
 void WS2812_show(void);
 
 /*----------------------------------------------*
- * 全局变量                                     *
+ * Ы跑獹                                     *
  *----------------------------------------------*/
 uint8_t rBuffer[PIXEL_MAX] = {0};
 uint8_t gBuffer[PIXEL_MAX] = {0};
 uint8_t bBuffer[PIXEL_MAX] = {0};
 
 /*----------------------------------------------*
- * 模块级变量                                   *
+ * 家遏跑秖                                   *
  *----------------------------------------------*/
 typedef struct
 {
-    const uint16_t head[3];              //先发送3个0等待dma稳定
-    uint16_t data[24 * PIXEL_MAX];       //真正的数据
-    const uint16_t tail;                 //最后发送一个0，保证dma结束后，pwm输出低
+    const uint16_t head[3];              //祇癳30单dma﹚
+    uint16_t data[24 * PIXEL_MAX];       //痷タ计誹
+    const uint16_t tail;                 //程祇癳0玂靡dma挡pwm块
 } frame_buf_ST;
+typedef struct
+{
+	uint16_t data[24 * PIXEL_MAX];
+	const uint16_t tail;
+} frame2_buf_ST;
 
 frame_buf_ST frame = { .head[0] = 0,
                        .head[1] = 0,
@@ -50,16 +56,16 @@ uint8_t     gFlash_Mode     = 2;
 uint8_t     f9_state        = 0;
 int16_t     Flash1_speed_L, Flash1_speed_R;
 										 
-/*---------------------------------内部函数---------------------------------*/
+/*---------------------------------ず场ㄧ计---------------------------------*/
 /*****************************************************************************
- 函 数 名  : WS2812B_Init
- 功能描述  : WS2812初始化，将所有led清零
-            TIM5和DMA的初始化在main函数里面
- 输入参数  : void
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
+ ㄧ ?   : WS2812B_Init
+ 磞瓃  : WS2812﹍て盢┮Τled睲箂
+            TIM5㎝DMA﹍てmainㄧ计ń
+ ???  : void
+ ???  : 礚
+     :
+ ?ノㄧ?  :
+ 砆?ㄧ?  :
 *****************************************************************************/
 void WS2812B_Init(void)
 {
@@ -68,24 +74,25 @@ void WS2812B_Init(void)
 //    {
 //        rainbow(10);
 //        WS2812_show();
-//        delay_ms(10);
+//        HAL_Delay(10);
 //    }
     setAllPixelColor(0, 0, 0);
     WS2812_show();		
 }
 
 /*****************************************************************************
- 函 数 名  : WS2812_show
- 功能描述  : 将数据整理到缓存数组，并通过DMA发送一帧数据
- 输入参数  : void
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
+ ㄧ ?   : WS2812_show
+ 磞瓃  : 盢攫誹俱瞶ず计舱硄筁DMA祇癳赫计誹
+ ???  : void
+ ???  : 礚
+     :
+ ?ノㄧ?  :
+ 砆?ㄧ?  :
 *****************************************************************************/
 void WS2812_show(void)
 {
-    int8_t i, j;
+    int8_t i, j,k;
+	k = 0;
 
     for(i = 0; i < PIXEL_MAX; i++)
     {
@@ -105,31 +112,34 @@ void WS2812_show(void)
 //            frame.data[24 * i + j + 16] = (bBuffer[PIXEL_MAX-i-1] & (0x80 >> j)) ? BIT_1 : BIT_0;
 //        }
 //    }
-    HAL_TIM_PWM_Start_DMA(&htim8, TIM_CHANNEL_1, (uint32_t *)&frame, 3 + 24 * PIXEL_MAX + 1);
+    HAL_TIM_PWM_Start_DMA(&htim8, TIM_CHANNEL_2, (uint32_t *)&frame, 3 + 24 * PIXEL_MAX + 1);
+		HAL_TIM_PWM_Start_DMA(&htim1, TIM_CHANNEL_1, (uint32_t *)&frame, 3 + 24 * PIXEL_MAX + 1);
 }
 
 /*****************************************************************************
- 函 数 名  : HAL_TIM_PWM_PulseFinishedCallback
- 功能描述  : PWM完成中断回调函数，因为hal库自身并没有关掉PWM,所以要在完成后自己关掉
- 输入参数  : void
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
+ ㄧ ?   : HAL_TIM_PWM_PulseFinishedCallback
+ 磞瓃  : PWMЧΘい耞秸ㄧ计hal畐ō⊿Τ闽奔PWM,┮璶ЧΘ闽奔
+ ???  : void
+ ???  : 礚
+     :
+ ?ノㄧ?  :
+ 砆?ㄧ?  :
 *****************************************************************************/
 void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
 {
-    HAL_TIM_PWM_Stop(&htim8,TIM_CHANNEL_1);
+    HAL_TIM_PWM_Stop(&htim8,TIM_CHANNEL_2);
+		HAL_TIM_PWM_Stop(&htim1,TIM_CHANNEL_1);
+	  
 }
 
 /*****************************************************************************
- 函 数 名  : sign
- 功能描述  : 如果输入为正数则返回1，为负返回-1，否则返回0
- 输入参数  : int16_t db
- 输出参数  : 无
- 返 回 值  : 0，-1,1
- 调用函数  :
- 被调函数  :
+ ㄧ ?   : sign
+ 磞瓃  : 狦块タ计玥1璽-1玥0
+ 块把计  : int16_t db
+ 块把计  : 礚
+     : 0-1,1
+ ?ノㄧ?  :
+ 砆?ㄧ?  :
 *****************************************************************************/
 int8_t sign(int16_t db)
 {
@@ -146,15 +156,15 @@ int8_t sign(int16_t db)
 }
 
 /*****************************************************************************
- 函 数 名  : WS2812B_Wheel_1
- 功能描述  : 根据外部设置左右轮速度，控制跑马灯速度
-             速度设置函数为void WS2812_set_Wheel_1(int16_t speed_L,int16_t speed_R)；
+ ㄧ ?   : WS2812B_Wheel_1
+ 磞瓃  : 誹场砞竚オ近硉北禲皑縊硉
+             硉?竚ㄧ??void WS2812_set_Wheel_1(int16_t speed_L,int16_t speed_R)
 
- 输入参数  : void
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  : WS2812B_Process
+ 块把计  : void
+ 块把计  : 礚
+     :
+ ?ノㄧ?  :
+ 砆?ㄧ?  : WS2812B_Process
 *****************************************************************************/
 void WS2812B_Wheel_1(void)  //
 {
@@ -203,7 +213,7 @@ void WS2812B_Wheel_1(void)  //
             n++;
         }
 
-        //判断极性
+        //?体┦
         if(sign(Flash1_speed_L) == -1)
         {
             head_l++;
@@ -241,7 +251,7 @@ void WS2812B_Wheel_1(void)  //
             n++;
         }
 
-        //判断极性
+        //?体┦
         if(sign(Flash1_speed_R) == 1)
         {
             head_r++;
@@ -261,14 +271,14 @@ void WS2812B_Wheel_1(void)  //
     cnt_r++;
 }
 /*****************************************************************************
- 函 数 名  : WS2812_flash_1
- 功能描述  : 彩色流水灯 0.5s一颗
+ ㄧ ?   : WS2812_flash_1
+ 磞瓃  : 眒︹瑈縊 0.5s聋
 
- 输入参数  : void
- 输出参数  : 无
- 返 回 值  :
- 调用函数  : WS2812_Process
- 被调函数  :
+ 块把计  : void
+ 块把计  : 礚
+     :
+ ?ノㄧ?  : WS2812_Process
+ 砆?ㄧ?  :
 *****************************************************************************/
 void WS2812_flash_1(void)
 {
@@ -335,13 +345,13 @@ void WS2812_flash_1(void)
     }
 }
 /*****************************************************************************
- 函 数 名  : WS2812_flash_2
- 功能描述  : 单色流水灯 0.5s一颗
- 输入参数  : void
- 输出参数  : 无
- 返 回 值  :
- 调用函数  : WS2812_Process
- 被调函数  :
+ ㄧ ?   : WS2812_flash_2
+ 磞瓃  : 虫︹瑈縊 0.5s聋
+ 块把计  : void
+ 块把计  : 礚
+     :
+ 秸ノㄧ计  : WS2812_Process
+ 砆秸ㄧ计  :
 *****************************************************************************/
 void WS2812_flash_2(void)
 {
@@ -352,7 +362,7 @@ void WS2812_flash_2(void)
     uint32_t timestamp = HAL_GetTick();
     
     static uint8_t  loop = 0;
-    if(loop == 0) next_time = timestamp; loop = 1;  //首次调用初始化
+    if(loop == 0) next_time = timestamp; loop = 1;  //Ω秸ノ﹍て
 
     if(timestamp > next_time)// && timestamp - next_time < FlashPeriod_ms*5)
     {
@@ -368,29 +378,29 @@ void WS2812_flash_2(void)
 }
 
 /*****************************************************************************
- 函 数 名  : WS2812_flash_3
- 功能描述  : 绿色呼吸灯
-            以正弦方式产生呼吸效果
- 输入参数  : void
- 输出参数  : 无
- 返 回 值  :
- 调用函数  : WS2812_Process
- 被调函数  :
+ ㄧ ?   : WS2812_flash_3
+ 磞瓃  : 厚︹㊣縊
+            タ┒よΑ玻ネ㊣狦
+ 块把计  : void
+ 块把计  : 礚
+     :
+ 秸ノㄧ计  : WS2812_Process
+ 砆秸ㄧ计  :
 *****************************************************************************/
 
 void WS2812_flash_3(void)
 {
     static uint32_t next_time      = 0;
-    const  uint32_t FlashPeriod_ms = 1000;      //呼吸周期
-    const  uint8_t  DPI            = 100;       //分辨率
-    const  uint8_t  max            = 100;       //最大亮度
-    const  uint8_t  min            = 0;         //最小亮度
+    const  uint32_t FlashPeriod_ms = 1000;      //㊣㏄戳
+    const  uint8_t  DPI            = 100;       //だ侩瞯
+    const  uint8_t  max            = 100;       //程獹
+    const  uint8_t  min            = 0;         //程獹
     static uint8_t  cnt            = 0;
     uint8_t  brighten;
     uint32_t timestamp = HAL_GetTick();
     
     static uint8_t  loop = 0;
-    if(loop == 0) next_time = timestamp; loop = 1;  //首次调用初始化
+    if(loop == 0) next_time = timestamp; loop = 1;  //Ω秸ノ﹍て
 
     if(timestamp > next_time)// && timestamp - next_time < FlashPeriod_ms*5)
     {
@@ -403,27 +413,27 @@ void WS2812_flash_3(void)
     }
 }
 /*****************************************************************************
- 函 数 名  : WS2812_flash_4
- 功能描述  : 青色呼吸灯
- 输入参数  : void
- 输出参数  : 无
- 返 回 值  :
- 调用函数  : WS2812_Process
- 被调函数  :
+ ㄧ ?   : WS2812_flash_4
+ 磞瓃  : 獵︹㊣縊
+ 块把计  : void
+ 块把计  : 礚
+     :
+ 秸ノㄧ计  : WS2812_Process
+ 砆秸ㄧ计  :
 *****************************************************************************/
 void WS2812_flash_4(void)
 {
     static uint32_t next_time      = 0;
-    const  uint32_t FlashPeriod_ms = 1000;      //呼吸周期
-    const  uint8_t  DPI            = 100;       //分辨率
-    const  uint8_t  max            = 100;       //最大亮度
-    const  uint8_t  min            = 0;         //最小亮度
+    const  uint32_t FlashPeriod_ms = 1000;      //㊣㏄戳
+    const  uint8_t  DPI            = 100;       //だ侩瞯
+    const  uint8_t  max            = 100;       //程獹
+    const  uint8_t  min            = 0;         //程獹
     static uint8_t  cnt            = 0;
     uint8_t  brighten;
     uint32_t timestamp = HAL_GetTick();
     
     static uint8_t  loop = 0;
-    if(loop == 0) next_time = timestamp; loop = 1;  //首次调用初始化
+    if(loop == 0) next_time = timestamp; loop = 1;  //Ω秸ノ﹍て
 
     if(timestamp > next_time)// && timestamp - next_time < FlashPeriod_ms*5)
     {
@@ -436,13 +446,13 @@ void WS2812_flash_4(void)
     }
 }
 /*****************************************************************************
- 函 数 名  : WS2812_flash_5
- 功能描述  : 青色常亮
- 输入参数  : void
- 输出参数  : 无
- 返 回 值  :
- 调用函数  : WS2812_Process
- 被调函数  :
+ ㄧ ?   : WS2812_flash_5
+ 磞瓃  : 獵︹盽獹
+ 块把计  : void
+ 块把计  : 礚
+     :
+ 秸ノㄧ计  : WS2812_Process
+ 砆秸ㄧ计  :
 *****************************************************************************/
 void WS2812_flash_5(void)
 {
@@ -451,13 +461,13 @@ void WS2812_flash_5(void)
 }
 
 /*****************************************************************************
- 函 数 名  : WS2812_flash_6
- 功能描述  : 黄色常亮
- 输入参数  : void
- 输出参数  : 无
- 返 回 值  :
- 调用函数  : WS2812_Process
- 被调函数  :
+ ㄧ ?   : WS2812_flash_6
+ 磞瓃  : 独︹盽獹
+ 把计  : void
+ 块把计  : 礚
+     :
+ 秸ノㄧ计  : WS2812_Process
+ 砆秸ㄧ计  :
 *****************************************************************************/
 void WS2812_flash_6(void)
 {
@@ -466,13 +476,13 @@ void WS2812_flash_6(void)
 }
 
 /*****************************************************************************
- 函 数 名  : WS2812_flash_7
- 功能描述  : 红色常亮
- 输入参数  : void
- 输出参数  : 无
- 返 回 值  :
- 调用函数  : WS2812_Process
- 被调函数  :
+ ㄧ ?   : WS2812_flash_7
+ 磞瓃  : ︹盽獹
+ 块把计  : void
+ 块把计  : 礚
+     :
+ 秸ノㄧ计  : WS2812_Process
+ 砆秸ㄧ计  :
 *****************************************************************************/
 void WS2812_flash_7(void)
 {
@@ -481,27 +491,27 @@ void WS2812_flash_7(void)
 }
 
 /*****************************************************************************
- 函 数 名  : WS2812_flash_8
- 功能描述  : 红色呼吸灯
- 输入参数  : void
- 输出参数  : 无
- 返 回 值  :
- 调用函数  : WS2812_Process
- 被调函数  :
+ ㄧ ?   : WS2812_flash_8
+ 磞瓃  : ︹㊣縊
+ 块把计  : void
+ 块把计  : ?
+     :
+ 秸ノㄧ计  : WS2812_Process
+ 砆秸ㄧ计  :
 *****************************************************************************/
 void WS2812_flash_8(void)
 {
            uint32_t timestamp      = HAL_GetTick();
     static uint32_t next_time      = 0;
-    const  uint32_t FlashPeriod_ms = 1000;      //呼吸周期
-    const  uint8_t  DPI            = 100;       //分辨率
-    const  uint8_t  max            = 100;       //最大亮度
-    const  uint8_t  min            = 0;         //最小亮度
+    const  uint32_t FlashPeriod_ms = 1000;      //㊣㏄戳
+    const  uint8_t  DPI            = 100;       //だ侩瞯
+    const  uint8_t  max            = 100;       //程獹
+    const  uint8_t  min            = 0;         //程獹
     static uint8_t  cnt            = 0;
     uint8_t  brighten;
     
     static uint8_t  loop = 0;
-    if(loop == 0) next_time = timestamp; loop = 1;  //首次调用初始化
+    if(loop == 0) next_time = timestamp; loop = 1;  //Ω秸ノ﹍て
 
     if((timestamp > next_time))// && (timestamp - next_time < FlashPeriod_ms*5))
     {
@@ -514,13 +524,13 @@ void WS2812_flash_8(void)
     }
 }
 /*****************************************************************************
- 函 数 名  : WS2812_flash_9
- 功能描述  : 七彩变换
- 输入参数  : void
- 输出参数  : 无
- 返 回 值  :
- 调用函数  : WS2812_Process
- 被调函数  :
+ ㄧ 计   : WS2812_flash_9
+ 磞瓃  : 眒跑传
+ 块把计  : void
+ 块把计  : ?
+     :
+ 秸ノㄧ计  : WS2812_Process
+ 砆秸ㄧ计  :
 *****************************************************************************/
 void WS2812_flash_9(void)
 {
@@ -529,7 +539,7 @@ void WS2812_flash_9(void)
     static uint32_t next_time = 0;
     
     static uint8_t  loop = 0;
-    if(loop == 0) next_time = timestamp; loop = 1;  //首次调用初始化
+    if(loop == 0) next_time = timestamp; loop = 1;  //Ω秸ノ﹍て
     
 
     if(f9_state == 0)
@@ -592,14 +602,14 @@ void WS2812_flash_9(void)
 
 
 /*****************************************************************************
- 函 数 名  : set_micdir
- 功能描述  : 设置指示方向的led
-             测试函数
- 输入参数  : void
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
+ ㄧ ?   : set_micdir
+ 磞瓃  : 砞竚ボよled
+             代刚ㄧ计
+ 把计  : void
+ 块把计  : ?
+     :
+ 秸ノㄧ计  :
+ 砆秸ㄧ计  :
 *****************************************************************************/
 void set_micdir(uint16_t data)
 {
@@ -610,24 +620,24 @@ void set_micdir(uint16_t data)
 //        rainbow(10);
 //    }
     int8_t dir_led;
-    static uint32_t led_tab[PIXEL_MAX] = {0x00ff00,0x5F0000,0x3F0000,0x2F0000,0x1F0000,0x0F0000,0x080000,0x010000};	//,0x010000
+    //static uint32_t led_tab[PIXEL_MAX] = {0x00ff00,0x5F0000,0x3F0000,0x2F0000,0x1F0000,0x0F0000,0x080000,0x010000};	//,0x010000
     int8_t led_mab[20];
     uint8_t i,borrow;
     if(data < 360)
     {
 		/*
-			在一共有18颗LED的情况下（1-18），led1的角度为350-369(09)LED2=10-29,LED3=30-59 ......
-			所以当余数大于等于10时，应该下个led亮
+			Τ18聋LED薄猵1-18led1à350-369(09)LED2=10-29,LED3=30-59 ......
+			┮讽计单10莱赣led獹
 		*/
-    dir_led = (359-data) /space_angle;  //哪个led应该亮
-		borrow = (359-data) % space_angle;	// 求余数
-		if(borrow < 10) 					//是否借位
+    dir_led = (359-data) /space_angle;  //led莱赣獹
+		borrow = (359-data) % space_angle;	// ―计
+		if(borrow < 10) 					//琌
 		{
 			if(--dir_led <0) 
 				dir_led = PIXEL_MAX-1;
 		}
 		
-		//硬件错了一位
+		//祑ン岿
 		dir_led++;
 		if(dir_led > PIXEL_MAX-1) 
 			dir_led = 0;
@@ -636,7 +646,7 @@ void set_micdir(uint16_t data)
 		SetPixelColor(dir_led,FIX_GRN);
 		
 //        led_mab[0] = dir_led;
-//		//考虑过0，整理到正常的led顺序
+//		//σ納筁0俱瞶タ盽led抖
 //        for(i=1; i<8; i++)
 //        {
 //            led_mab[2*i-1] = dir_led + i;
@@ -658,13 +668,13 @@ void set_micdir(uint16_t data)
 
 
 /*****************************************************************************
- 函 数 名  : WS2812_Process
- 功能描述  : WS2812主进程函数,应该循环调用，
- 输入参数  : void
- 输出参数  : 无
- 返 回 值  :
- 调用函数  : freertos.c StartLEDTask02()
- 被调函数  :
+ ㄧ 计   : WS2812_Process
+ 磞瓃  : WS2812秈祘ㄧ计,莱赣碻吏秸ノ
+ 块把计  : void
+ 块把计  : 礚
+     :
+ 秸ノㄧ计  : freertos.c StartLEDTask02()
+ 砆秸ㄧ计  :
 *****************************************************************************/
 void WS2812_Process(uint8_t model)
 {
@@ -675,34 +685,34 @@ void WS2812_Process(uint8_t model)
         {
         case 0x01:
             rainbowCycle(10);
-            //WS2812_flash_1();     //彩色跑马灯
+            //WS2812_flash_1();     //眒︹禲皑縊
             break;
 
         case 0x02:            
-            WS2812_flash_2();       //绿色跑马灯
+            WS2812_flash_2();       //厚︹禲皑縊
             break;
 
         case 0x03:
-            WS2812_flash_3();       //绿色呼吸灯
+            WS2812_flash_3();       //厚︹㊣縊
             break;
 
         case 0x04:
-            WS2812_flash_4();       //青色呼吸灯
+            WS2812_flash_4();       //獵︹㊣縊
             break;
         case 0x05:
-            WS2812_flash_5();       //青色常亮
+            WS2812_flash_5();       //獵︹盽獹
             break;
         case 0x06:
-            WS2812_flash_6();       //黄色常亮
+            WS2812_flash_6();       //独︹盽獹
             break;
         case 0x07:
-            WS2812_flash_7();       //红色常亮
+            WS2812_flash_7();       //︹盽獹
             break;
         case 0x08:
-            WS2812_flash_8();       //红色呼吸
+            WS2812_flash_8();       //︹㊣
             break;
         case 0x09:
-            //WS2812_flash_9();     //彩色切换
+            //WS2812_flash_9();     //眒︹ち传
             rainbow(20);
             break;
 				case 0x0A:
@@ -717,17 +727,17 @@ void WS2812_Process(uint8_t model)
             break;
         }
         WS2812_show();
-				delay_ms(10);
+				HAL_Delay(10);
     }
 }
 /*****************************************************************************
- 函 数 名  : WS2812_set_flash
- 功能描述  : 设置flash模式
- 输入参数  : uint8_t flash
- 输出参数  : 无
- 返 回 值  :
- 调用函数  : uusart.c usart_cmd()
- 被调函数  :
+ ㄧ 计   : WS2812_set_flash
+ 磞瓃  : 砞竚flash家Α
+ 块把计  : uint8_t flash
+ 块把计  : 礚
+     :
+ 秸ノㄧ计  : uusart.c usart_cmd()
+ 砆秸ㄧ计  :
 *****************************************************************************/
 void WS2812_set_flash(uint8_t flash,uint16_t angle)
 {
@@ -742,21 +752,21 @@ void WS2812_set_flash(uint8_t flash,uint16_t angle)
     {
         set_micdir(angle);
     }
-    if(flash == 9)      //保证flash9 每次从红开始
+    if(flash == 9)      //玂靡flash9 –Ω眖秨﹍
     {
         f9_state = 0;
     }
 }
 
 /*****************************************************************************
- 函 数 名  : WS2812_set_Wheel_1
- 功能描述  : 在转速模式下，设置速度
- 输入参数  : int16_t speed_L
+ ㄧ 计   : WS2812_set_Wheel_1
+ 磞瓃  : 锣硉家Α砞竚硉
+ 块把计  : int16_t speed_L
              int16_t speed_R
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
+ 块把计  : 礚
+     :
+ 秸ノㄧ计  :
+ 砆秸ㄧ计  :
 *****************************************************************************/
 void WS2812_set_Wheel_1(int16_t speed_L, int16_t speed_R)
 {
@@ -786,7 +796,7 @@ void WS2812B_Test(void)
 //        }
         
         WS2812_show();
-        delay_ms(10);
+        HAL_Delay(10);
         
         
         //theaterChase(NEO_BLU(100),100);

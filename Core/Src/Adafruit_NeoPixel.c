@@ -1,5 +1,7 @@
 #include "Adafruit_NeoPixel.h"
-#include "delay.h"
+//#include "delay.h"
+
+#include "stm32f4xx_hal.h"
 
 extern uint8_t rBuffer[PIXEL_MAX];
 extern uint8_t gBuffer[PIXEL_MAX];
@@ -141,7 +143,7 @@ void theaterChase(uint32_t c, uint8_t wait)
                 SetPixelColor(i + q, c);
             }
             WS2812_show();
-            delay_ms(wait);
+            HAL_Delay(wait);
 
             for ( i = 0; i < PIXEL_MAX; i = i + 1)   //turn every one pixel off
             {
@@ -167,7 +169,7 @@ void theaterChaseRainbow(uint8_t wait)
                 SetPixelColor(i + q, Wheel( (i + j) % 255));
             }
             WS2812_show();
-            delay_ms(wait);
+            HAL_Delay(wait);
 
             for ( i = 0; i < PIXEL_MAX; i = i + 1)   //turn every one pixel off
             {

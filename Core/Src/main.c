@@ -25,7 +25,6 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "delay.h"
 #include "ws2812b.h"
 /* USER CODE END Includes */
 
@@ -83,30 +82,31 @@ int main(void)
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
-	delay_init(72);
+
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_DMA_Init();
   MX_TIM8_Init();
+  MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
-	HAL_TIM_PWM_Start(&htim8,TIM_CHANNEL_1);
+	//__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_1, 30);
+	//__HAL_TIM_SetCompare(&htim1, TIM_CHANNEL_1, 30);
+	HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_2);
+	HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
+	WS2812B_Init();
+  //HAL_Delay(1000);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-	
-	__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_1, 30);
-  HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_2);
-	//WS2812B_Init();
-  delay_ms(1000);
   while (1)
   {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-		for(int j = 1; j<12; j++){
+				for(int j = 1; j<12; j++){
 			for(int i = 0; i<800; i++){
 				WS2812_Process(j);
 

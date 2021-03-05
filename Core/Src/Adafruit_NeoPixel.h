@@ -5,43 +5,43 @@
 #include "ws2812b.h"
 
 /*ÁÁ¶È¿Éµ÷                  G R B         */
-#define NEO_RED(x)    Color(0,x,0)      //ºì
-#define NEO_GRN(x)    Color(x,0,0)      //ÂÌ
-#define NEO_BLU(x)    Color(0,0,x)      //À¶
-#define NEO_YLW(x)    Color(x,x,0)      //»Æ
-#define NEO_MAG(x)    Color(0,x,x)      //Ñóºì
-#define NEO_CYA(x)    Color(x,0,x)      //Çà
-#define NEO_WHI(x)    Color(x,x,x)      //°×
+#define NEO_RED(x)    Color(0,x,0)      //¬õ
+#define NEO_GRN(x)    Color(x,0,0)      //ºñ
+#define NEO_BLU(x)    Color(0,0,x)      //ÂÅ
+#define NEO_YLW(x)    Color(x,x,0)      //¶À
+#define NEO_MAG(x)    Color(0,x,x)      //¬v¬õ
+#define NEO_CYA(x)    Color(x,0,x)      //«C
+#define NEO_WHI(x)    Color(x,x,x)      //¥Õ
 
-//µ¥¸öÁÁ    grn       
-///*¹Ì¶¨ÖµÁÁ¶È*/           //x1,0x40,1
-//#define FIX_RED       Color(1,85,1)     //ºì
+//³æ­Ó«G    grn       
+///*©T©w­È«G«×*/           //x1,0x40,1
+//#define FIX_RED       Color(1,85,1)     //¬õ
 //                        // x12,x37,0
-//#define FIX_ORG       Color(23,75,0)    //³È
+//#define FIX_ORG       Color(23,75,0)    //¾í
 //                         // x37,x36,0
-//#define FIX_YLW       Color(75,74,1)    //»Æ
+//#define FIX_YLW       Color(75,74,1)    //¶À
 //                            //0x28,0,1
-//#define FIX_GRN       Color(75,0,9)     //ÂÌÉ«
+//#define FIX_GRN       Color(75,0,9)     //ºñ¦â
 //                         //x28,0,x25   
-//#define FIX_CYA       Color(45,0,42)    //À¶ÂÌÉ«
+//#define FIX_CYA       Color(45,0,42)    //ÂÅºñ¦â
 //                           //x1,x5,x50 
-//#define FIX_BLU       Color(2,7,150)    //À¶É«
+//#define FIX_BLU       Color(2,7,150)    //ÂÅ¦â
 //                          //x1,x28,x22  
-//#define FIX_PUR       Color(1,75,67)    //×ÏÉ«
+//#define FIX_PUR       Color(1,75,67)    //µµ¦â
 //                          //x18,x18,x18
-//#define FIX_WHI       Color(30,30,30)   //°×É«
-//#define FIX_BLK       Color(0,0,0)      //ºÚÉ«(Ãð)
+//#define FIX_WHI       Color(30,30,30)   //¥Õ¦â
+//#define FIX_BLK       Color(0,0,0)      //¶Â¦â(¦Ç)
 
-/*¹Ì¶¨ÖµÁÁ¶È*/          
-#define FIX_RED       Color(0x1,0x40,0x01)  //ºì
-#define FIX_ORG       Color(0x12,0x37,0)    //³È
-#define FIX_YLW       Color(0x37,0x36,0)    //»Æ
-#define FIX_GRN       Color(0x28,0,0x01)    //ÂÌÉ« 
-#define FIX_CYA       Color(0x28,0,0x25)    //Çà
-#define FIX_BLU       Color(0x01,0x05,0x50) //À¶É« 
-#define FIX_PUR       Color(0x01,0x28,0x22) //×ÏÉ«
-#define FIX_WHI       Color(0x18,0x18,0x18) //°×É«
-#define FIX_BLK       Color(0,0,0)          //ºÚÉ«(Ãð)
+/*©T©w­È«G«×*/          
+#define FIX_RED       Color(0x1,0x40,0x01)  //¬õ
+#define FIX_ORG       Color(0x12,0x37,0)    //¾í
+#define FIX_YLW       Color(0x37,0x36,0)    //¶À
+#define FIX_GRN       Color(0x28,0,0x01)    //ºñ¦â 
+#define FIX_CYA       Color(0x28,0,0x25)    //«C
+#define FIX_BLU       Color(0x01,0x05,0x50) //ÂÅ¦â 
+#define FIX_PUR       Color(0x01,0x28,0x22) //µµ¦â
+#define FIX_WHI       Color(0x18,0x18,0x18) //¥Õ¦â
+#define FIX_BLK       Color(0,0,0)          //¶Â¦â(¦Ç)
 
 void     setAllPixelColor(uint8_t r, uint8_t g, uint8_t b);
 void     SetAllPixelColor(uint32_t c);
